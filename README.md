@@ -379,7 +379,7 @@ Only the upcoming release is detailed here. For the full history of published re
 - Windows 继续使用项目原有启动脚本；本轮尚未进行 Windows 实机验证，也未验证完整模型训练。
 - 包含独立的实验性 MLX SDXL LoRA 命令行工具，采用单独环境，不接入 GUI 的「开始训练」按钮。使用范围和验证限制见 [MLX 文档](docs/LoRA/MLX.md)。
 
-对应代码提交：`79bc978`（双语工作台与实验工具）、`818af90`（训练设置修复）、`579d5a1`（合并设置页）。已完成自动化回归测试及上述浏览器检查。
+对应代码提交：`004028a`（双语工作台与实验工具）、`fd9248b`（训练设置修复）、`06d543a`（合并设置页）。已完成自动化回归测试及上述浏览器检查。
 
 ### v26.0.0
 
