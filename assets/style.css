@@ -412,3 +412,32 @@
     border: 1px solid #4f4d4b;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+/* Single language control, aligned with the application's upper-right corner. */
+#kohya-language-switcher {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0;
+}
+#kohya-language-switcher button {
+    border: 1px solid var(--border-color-primary, #d1d5db);
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.8rem;
+    background: var(--button-secondary-background-fill, #f3f4f6);
+    color: var(--body-text-color, #374151);
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+#kohya-language-switcher button[aria-pressed="true"] {
+    color: #fff;
+    background: #2563eb;
+    border-color: #2563eb;
+}
+#kohya-language-switcher button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+.kohya-language-setting-hidden {
+    display: none !important;
+}

@@ -8,6 +8,7 @@ import toml
 from datetime import datetime
 from .common_gui import (
     check_if_model_exist,
+    training_workspace_intro,
     color_aug_changed,
     get_any_file_path,
     get_executable_path,
@@ -2643,30 +2644,40 @@ def lora_tab(
     global use_shell
     use_shell = use_shell_flag
 
-    with gr.Tab("Training"), gr.Column(variant="compact") as tab:
-        gr.Markdown(
-            "Train a custom model using kohya train network LoRA python code..."
-        )
+    with (
+        gr.Tab("Training"),
+        gr.Column(variant="compact", elem_classes=["studio-training"]) as tab,
+    ):
+        gr.HTML(training_workspace_intro("LoRA"))
 
-        # Setup Configuration Files Gradio
-        with gr.Accordion("Configuration", open=False):
-            configuration = ConfigurationFile(headless=headless, config=config)
+        # Compact access to presets and execution settings above the workspace.
+        with gr.Row(elem_classes=["studio-setup-row"]):
+            with gr.Column(scale=1, min_width=220):
+                with gr.Accordion("Configuration", open=False):
+                    configuration = ConfigurationFile(headless=headless, config=config)
+            with gr.Column(scale=1, min_width=220):
+                with gr.Accordion("Accelerate launch", open=False), gr.Column():
+                    accelerate_launch = AccelerateLaunch(config=config)
 
-        with gr.Accordion("Accelerate launch", open=False), gr.Column():
-            accelerate_launch = AccelerateLaunch(config=config)
-
-        with gr.Column():
-            source_model = SourceModel(
-                save_model_as_choices=[
-                    "ckpt",
-                    "safetensors",
-                ],
-                headless=headless,
-                config=config,
-            )
-
-            with gr.Accordion("Folders", open=True), gr.Group():
-                folders = Folders(headless=headless, config=config)
+        with gr.Row(elem_classes=["studio-overview"]):
+            with gr.Column(scale=2, min_width=360):
+                source_model = SourceModel(
+                    save_model_as_choices=["ckpt", "safetensors"],
+                    headless=headless,
+                    config=config,
+                    elem_id="lora-model",
+                )
+            with gr.Column(scale=1, min_width=280):
+                with (
+                    gr.Accordion(
+                        "Folders",
+                        open=True,
+                        elem_id="lora-folders",
+                        elem_classes=["studio-card", "studio-folders-card"],
+                    ),
+                    gr.Group(),
+                ):
+                    folders = Folders(headless=headless, config=config)
 
         with gr.Accordion("Metadata", open=False), gr.Group():
             metadata = MetaData(config=config)
@@ -2686,7 +2697,15 @@ def lora_tab(
 
             gradio_dataset_balancing_tab(headless=headless)
 
-        with gr.Accordion("Parameters", open=False), gr.Column():
+        with (
+            gr.Accordion(
+                "Parameters",
+                open=False,
+                elem_id="lora-parameters",
+                elem_classes=["studio-card", "studio-parameters-card"],
+            ),
+            gr.Column(),
+        ):
 
             def list_presets(path):
                 json_files = []
@@ -3599,11 +3618,12 @@ def lora_tab(
             )
 
         global executor
-        executor = CommandExecutor(headless=headless)
-
-        with gr.Column(), gr.Group():
+        with gr.Column(elem_id="lora-actions", elem_classes=["studio-actions"]):
             with gr.Row():
-                button_print = gr.Button("Print training command")
+                with gr.Column(scale=2, min_width=160):
+                    executor = CommandExecutor(headless=headless)
+                with gr.Column(scale=1, min_width=160):
+                    button_print = gr.Button("Print training command")
 
         # Setup gradio tensorboard buttons
         TensorboardManager(headless=headless, logging_dir=folders.logging_dir)

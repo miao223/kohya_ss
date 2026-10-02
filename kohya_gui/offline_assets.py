@@ -52,6 +52,8 @@ _OFFLINE_PATCH_INSTALLED = False
 def build_offline_theme() -> gr.themes.Base:
     """Default theme using only local/system fonts (no Google Fonts CDN)."""
     return gr.themes.Default(
+        primary_hue="emerald",
+        neutral_hue="slate",
         font=[
             LocalFont("IBM Plex Sans"),
             Font("ui-sans-serif"),

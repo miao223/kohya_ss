@@ -1805,3 +1805,27 @@ def setup_environment():
         env["XFORMERS_FORCE_DISABLE_TRITON"] = "1"
 
     return env
+
+
+def training_workspace_intro(mode: str) -> str:
+    """Shared presentation for the two primary training workflows."""
+    if mode == "Dreambooth":
+        badge = "Full model training"
+        title = "Dreambooth workspace"
+        description = "Fine-tune a base model around your subject, style or concept."
+        prefix = "dreambooth"
+    else:
+        badge = "Low-rank adaptation"
+        title = "LoRA workspace"
+        description = "Train a compact adapter for your characters, styles and ideas."
+        prefix = "lora"
+    return f"""<section class="studio-intro">
+      <span class="studio-eyebrow">{badge}</span>
+      <h1>{title}</h1><p>{description}</p>
+      <nav class="studio-workflow" aria-label="Training workflow">
+        <a href="#{prefix}-model"><span>01</span><span>Model &amp; dataset</span></a>
+        <a href="#{prefix}-folders"><span>02</span><span>Output paths</span></a>
+        <a href="#{prefix}-parameters"><span>03</span><span>Training parameters</span></a>
+        <a href="#{prefix}-actions"><span>04</span><span>Launch training</span></a>
+      </nav>
+    </section>"""

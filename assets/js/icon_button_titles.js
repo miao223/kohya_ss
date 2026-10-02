@@ -12,9 +12,12 @@
     };
 
     function applyTitle(btn) {
-        if (btn.title) return;
-        const title = ICON_TITLES[btn.textContent.trim()];
-        if (title) btn.title = title;
+        const icon = btn.textContent.trim();
+        const title = ICON_TITLES[icon];
+        if (!title) return;
+        if (!btn.title) btn.title = title;
+        if (!btn.hasAttribute("aria-label")) btn.setAttribute("aria-label", title);
+        btn.dataset.toolIcon = { "📂": "folder", "📄": "file", "🔄": "refresh", "💾": "save" }[icon];
     }
 
     function applyTitles(root) {

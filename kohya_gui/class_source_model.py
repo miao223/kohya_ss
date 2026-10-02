@@ -48,6 +48,7 @@ class SourceModel:
         headless=False,
         finetuning=False,
         config: KohyaSSGUIConfig = {},
+        elem_id=None,
     ):
         self.headless = headless
         self.save_model_as_choices = save_model_as_choices
@@ -99,7 +100,12 @@ class SourceModel:
                 list_files(current_dataset_config_dir, exts=[".toml"], all=True)
             )
 
-        with gr.Accordion("Model", open=True):
+        with gr.Accordion(
+            "Model",
+            open=True,
+            elem_id=elem_id,
+            elem_classes=["studio-card", "studio-model-card"],
+        ):
             with gr.Column(), gr.Group():
                 model_ext = gr.Textbox(value="*.safetensors *.ckpt", visible=False)
                 model_ext_name = gr.Textbox(value="Model types", visible=False)

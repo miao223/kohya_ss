@@ -1,0 +1,19 @@
+/* Document-level styles: injected into head, outside Gradio's CSS scoping. */
+:root {
+    --kohya-shell-background: #f2f5f3;
+    scrollbar-gutter: stable;
+}
+:root.dark, :root:has(.dark) {
+    --kohya-shell-background: #111b16;
+}
+html, body {
+    min-height: 100%;
+    margin: 0;
+    background: var(--kohya-shell-background);
+}
+body { min-height: 100vh; }
+gradio-app {
+    display: block;
+    width: 100%;
+    min-width: 0;
+}

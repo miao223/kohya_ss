@@ -133,6 +133,8 @@ def test_blocks_created_with_analytics_disabled():
         patch.object(kohya_gui_launcher.gr, "Blocks") as mock_blocks,
         patch.object(kohya_gui_launcher.gr, "Tab") as mock_tab,
         patch.object(kohya_gui_launcher.gr, "Markdown"),
+        patch.object(kohya_gui_launcher.gr, "HTML"),
+        patch.object(kohya_gui_launcher.gr, "Tabs"),
         patch.object(
             kohya_gui_launcher, "build_offline_theme", wraps=build_offline_theme
         ) as mock_theme,
@@ -165,6 +167,7 @@ def test_blocks_created_with_analytics_disabled():
     mock_blocks.assert_called_once()
     kwargs = mock_blocks.call_args.kwargs
     assert kwargs.get("analytics_enabled") is False
+    assert kwargs.get("fill_width") is True
     # Gradio 6: css/head/theme moved off Blocks() onto launch() shell params.
     assert "theme" not in kwargs
     assert "css" not in kwargs
@@ -174,6 +177,7 @@ def test_blocks_created_with_analytics_disabled():
     assert theme is not None
     assert shell_params.get("css") is not None
     assert shell_params.get("head") is not None
+    assert '<style id="kohya-shell-style">' in shell_params["head"]
     for url in theme_stylesheet_urls(theme):
         assert not _is_google_fonts_url(url)
 

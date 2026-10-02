@@ -1,30 +1,30 @@
-import os
+"""Inject the language controls into the offline Gradio shell."""
+
+from pathlib import Path
+
 import gradio as gr
 import kohya_gui.localization as localization
 
-
-def file_path(fn):
-    return f"file={os.path.abspath(fn)}?{os.path.getmtime(fn)}"
+_ROOT = Path(__file__).resolve().parent.parent
 
 
-def js_html_str(language):
-    head = f'<script type="text/javascript">{localization.load_language_js(language)}</script>\n'
-    head += (
-        f'<script type="text/javascript">{open("./assets/js/script.js", "r", encoding="utf-8").read()}</script>\n'
+def js_html_str(language=None):
+    script = (_ROOT / "assets" / "js" / "localization.js").read_text(encoding="utf-8")
+    return (
+        '<script type="text/javascript">'
+        + localization.load_language_js(language)
+        + script
+        + "</script>\n"
     )
-    head += f'<script type="text/javascript">{open("./assets/js/localization.js", "r", encoding="utf-8").read()}</script>\n'
-    return head
 
 
-def add_javascript(language):
-    if language is None:
-        # print('no language')
-        return
-    jsStr = js_html_str(language)
+def add_javascript(language=None):
+    # Both languages are always available, including launches without --language.
+    js = js_html_str(language).encode("utf-8")
 
     def template_response(*args, **kwargs):
         res = localization.GrRoutesTemplateResponse(*args, **kwargs)
-        res.body = res.body.replace(b"</head>", f"{jsStr}</head>".encode("utf-8"))
+        res.body = res.body.replace(b"</head>", js + b"</head>", 1)
         res.init_headers()
         return res
 

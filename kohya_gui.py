@@ -52,19 +52,24 @@ def initialize_ui_interface(
     config, config_file_path, headless, use_shell, release_info, readme_content
 ):
     # Load custom CSS if available
-    css = read_file_content("./assets/style.css")
+    css = read_file_content("./assets/style.css") + read_file_content(
+        "./assets/studio.css"
+    )
     # Positions the hover-revealed `info=` tooltip (see assets/style.css);
-    # always injected, unlike add_javascript() below which only fires when
-    # --language is set. The initial enabled/disabled state comes from the
+    # The initial enabled/disabled state comes from the
     # Settings tab's persisted config.toml value; the checkbox there
     # live-updates window.KOHYA_INFO_TOOLTIP_ENABLED via its own js= handler.
     enable_info_tooltip = config.get("settings.enable_info_tooltip", True)
     info_tooltip_js = read_file_content("./assets/js/info_tooltip.js")
     icon_button_titles_js = read_file_content("./assets/js/icon_button_titles.js")
+    studio_js = read_file_content("./assets/js/studio.js")
+    shell_css = read_file_content("./assets/shell.css")
     head = (
+        f'<style id="kohya-shell-style">{shell_css}</style>'
         f'<script type="text/javascript">window.KOHYA_INFO_TOOLTIP_ENABLED = {str(enable_info_tooltip).lower()};</script>'
         f'<script type="text/javascript">{info_tooltip_js}</script>'
         f'<script type="text/javascript">{icon_button_titles_js}</script>'
+        f'<script type="text/javascript">{studio_js}</script>'
     )
     # Gradio 6 moved app-level shell params (css/head/theme) from Blocks() to
     # launch(); keep them bundled here so launch sites stay in sync.
@@ -75,47 +80,51 @@ def initialize_ui_interface(
     ui_interface = gr.Blocks(
         title=f"Kohya_ss GUI {release_info}",
         analytics_enabled=False,
+        fill_width=True,
     )
     with ui_interface:
-        # Create tabs for different functionalities
-        with gr.Tab("Dreambooth"):
-            (
-                train_data_dir_input,
-                reg_data_dir_input,
-                output_dir_input,
-                logging_dir_input,
-            ) = dreambooth_tab(
-                headless=headless, config=config, use_shell_flag=use_shell
-            )
-        with gr.Tab("LoRA"):
-            lora_tab(headless=headless, config=config, use_shell_flag=use_shell)
-        with gr.Tab("LECO"):
-            leco_tab(headless=headless, config=config, use_shell_flag=use_shell)
-        with gr.Tab("Anima LLLite"):
-            anima_lllite_tab(headless=headless, config=config, use_shell_flag=use_shell)
-        with gr.Tab("Textual Inversion"):
-            ti_tab(headless=headless, config=config, use_shell_flag=use_shell)
-        with gr.Tab("Finetuning"):
-            finetune_tab(headless=headless, config=config, use_shell_flag=use_shell)
-        with gr.Tab("Utilities"):
-            # Utilities tab requires inputs from the Dreambooth tab
-            utilities_tab(
-                train_data_dir_input=train_data_dir_input,
-                reg_data_dir_input=reg_data_dir_input,
-                output_dir_input=output_dir_input,
-                logging_dir_input=logging_dir_input,
-                headless=headless,
-                config=config,
-            )
-            with gr.Tab("LoRA"):
-                _ = LoRATools(headless=headless)
-        with gr.Tab("Settings"):
-            settings_tab(config=config, config_file_path=config_file_path)
-        with gr.Tab("About"):
-            # About tab to display release information and README content
-            gr.Markdown(f"kohya_ss GUI release {release_info}")
-            with gr.Tab("README"):
-                gr.Markdown(readme_content)
+        gr.HTML(
+            read_file_content("./assets/studio_header.html"), elem_id="studio-header"
+        )
+        with gr.Tabs(elem_id="studio-tabs"):
+            with gr.Tab("Dreambooth", elem_id="studio-dreambooth"):
+                (
+                    train_data_dir_input,
+                    reg_data_dir_input,
+                    output_dir_input,
+                    logging_dir_input,
+                ) = dreambooth_tab(
+                    headless=headless, config=config, use_shell_flag=use_shell
+                )
+            with gr.Tab("LoRA", elem_id="studio-lora"):
+                lora_tab(headless=headless, config=config, use_shell_flag=use_shell)
+            with gr.Tab("LECO"):
+                leco_tab(headless=headless, config=config, use_shell_flag=use_shell)
+            with gr.Tab("Anima LLLite"):
+                anima_lllite_tab(
+                    headless=headless, config=config, use_shell_flag=use_shell
+                )
+            with gr.Tab("Textual Inversion"):
+                ti_tab(headless=headless, config=config, use_shell_flag=use_shell)
+            with gr.Tab("Finetuning"):
+                finetune_tab(headless=headless, config=config, use_shell_flag=use_shell)
+            with gr.Tab("Utilities"):
+                utilities_tab(
+                    train_data_dir_input=train_data_dir_input,
+                    reg_data_dir_input=reg_data_dir_input,
+                    output_dir_input=output_dir_input,
+                    logging_dir_input=logging_dir_input,
+                    headless=headless,
+                    config=config,
+                )
+                with gr.Tab("LoRA"):
+                    _ = LoRATools(headless=headless)
+            with gr.Tab("Settings"):
+                settings_tab(config=config, config_file_path=config_file_path)
+            with gr.Tab("About"):
+                gr.Markdown(f"kohya_ss GUI release {release_info}")
+                with gr.Tab("README"):
+                    gr.Markdown(readme_content)
 
         # Display release information in a div element
         gr.Markdown(f"<div class='ver-class'>{release_info}</div>")
@@ -125,7 +134,7 @@ def initialize_ui_interface(
 
 # Function to configure and launch the UI
 def UI(**kwargs):
-    # Offline HTML patch first so localization's TemplateResponse wrapper (if any)
+    # Offline HTML patch first so localization's TemplateResponse wrapper
     # still chains through GrRoutesTemplateResponse after CDN/font rewrites.
     install_offline_template_patches()
     # Add custom JavaScript if specified
@@ -229,7 +238,10 @@ def initialize_arg_parser():
         ),
     )
     parser.add_argument(
-        "--language", type=str, default=None, help="Set custom language"
+        "--language",
+        type=str,
+        default=None,
+        help="Initial GUI language (zh-CN or en); the browser remembers later changes",
     )
     parser.add_argument(
         "--use-ipex",
