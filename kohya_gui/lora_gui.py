@@ -8,6 +8,7 @@ import toml
 from datetime import datetime
 from .common_gui import (
     check_if_model_exist,
+    validate_primary_training_settings,
     training_workspace_intro,
     color_aug_changed,
     get_any_file_path,
@@ -2794,29 +2795,24 @@ def lora_tab(
                                 value=False,
                                 info="Automatically determine the dim(rank) from the weight file.",
                             )
-                basic_training = BasicTraining(
-                    learning_rate_value=0.0001,
-                    lr_scheduler_value="cosine",
-                    lr_warmup_value=10,
-                    sdxl_checkbox=source_model.sdxl_checkbox,
-                    config=config,
-                )
-
-                with gr.Row():
-                    train_inpainting = gr.Checkbox(
-                        label="Train inpainting model",
-                        value=config.get("basic.train_inpainting", False),
-                        info='Trains a 9-channel inpainting model with randomly generated masks (train_network.py/sdxl_train_network.py only). Incompatible with "Cache latents".',
+                with gr.Row() as network_row:
+                    network_dim = gr.Slider(
+                        minimum=1,
+                        maximum=512,
+                        label="Network Rank (Dimension)",
+                        value=8,
+                        step=1,
+                        interactive=True,
                     )
-                train_inpainting.change(
-                    train_inpainting_changed,
-                    inputs=[train_inpainting],
-                    outputs=[
-                        basic_training.cache_latents,
-                        basic_training.cache_latents_to_disk,
-                    ],
-                )
-
+                    network_alpha = gr.Slider(
+                        minimum=0.00001,
+                        maximum=1024,
+                        label="Network Alpha",
+                        value=1,
+                        step=0.00001,
+                        interactive=True,
+                        info="alpha for LoRA weight scaling",
+                    )
                 with gr.Row():
                     text_encoder_lr = gr.Number(
                         label="Text Encoder learning rate",
@@ -2841,6 +2837,29 @@ def lora_tab(
                         minimum=0,
                         maximum=1,
                     )
+
+                basic_training = BasicTraining(
+                    learning_rate_value=0.0001,
+                    lr_scheduler_value="cosine",
+                    lr_warmup_value=10,
+                    sdxl_checkbox=source_model.sdxl_checkbox,
+                    config=config,
+                )
+
+                with gr.Row():
+                    train_inpainting = gr.Checkbox(
+                        label="Train inpainting model",
+                        value=config.get("basic.train_inpainting", False),
+                        info='Trains a 9-channel inpainting model with randomly generated masks (train_network.py/sdxl_train_network.py only). Incompatible with "Cache latents".',
+                    )
+                train_inpainting.change(
+                    train_inpainting_changed,
+                    inputs=[train_inpainting],
+                    outputs=[
+                        basic_training.cache_latents,
+                        basic_training.cache_latents_to_disk,
+                    ],
+                )
 
                 with gr.Row() as loraplus:
                     loraplus_lr_ratio = gr.Number(
@@ -2947,24 +2966,6 @@ def lora_tab(
                             info="Set if we change the information going into the system (True) or the information coming out of it (False).",
                             visible=False,
                         )
-                with gr.Row() as network_row:
-                    network_dim = gr.Slider(
-                        minimum=1,
-                        maximum=512,
-                        label="Network Rank (Dimension)",
-                        value=8,
-                        step=1,
-                        interactive=True,
-                    )
-                    network_alpha = gr.Slider(
-                        minimum=0.00001,
-                        maximum=1024,
-                        label="Network Alpha",
-                        value=1,
-                        step=0.00001,
-                        interactive=True,
-                        info="alpha for LoRA weight scaling",
-                    )
                 with gr.Row(visible=False) as convolution_row:
                     # locon= gr.Checkbox(label='Train a LoCon instead of a general LoRA (does not support v2 base models) (may not be able to some utilities now)', value=False)
                     conv_dim = gr.Slider(
@@ -4045,10 +4046,14 @@ def lora_tab(
 
         def _make_train_model_entry(print_only_comp):
             def _entry(data: dict):
+                settings = _kwargs_from_registry(data)
+                validate_primary_training_settings(
+                    settings, check_optimizer=not data[print_only_comp]
+                )
                 return train_model(
                     headless=data[dummy_headless],
                     print_only=data[print_only_comp],
-                    **_kwargs_from_registry(data),
+                    **settings,
                 )
 
             return _entry

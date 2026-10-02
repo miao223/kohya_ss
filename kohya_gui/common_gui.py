@@ -1829,3 +1829,89 @@ def training_workspace_intro(mode: str) -> str:
         <a href="#{prefix}-actions"><span>04</span><span>Launch training</span></a>
       </nav>
     </section>"""
+
+
+BITSANDBYTES_OPTIMIZERS = frozenset(
+    {
+        "adamw8bit",
+        "lion8bit",
+        "pagedadamw8bit",
+        "pagedadamw32bit",
+        "pagedlion8bit",
+        "sgdnesterov8bit",
+    }
+)
+OPTIMIZER_DEPENDENCY_MESSAGE = (
+    "The selected optimizer requires bitsandbytes, which is not installed in this "
+    "Python environment. Choose an available optimizer such as AdamW, or install "
+    "bitsandbytes in this environment before training."
+)
+
+
+def optimizer_dependency_error(optimizer: str) -> str:
+    """Check optional optimizer dependencies without importing GPU libraries."""
+    import importlib.util
+
+    name = str(optimizer or "").strip().lower()
+    if name not in BITSANDBYTES_OPTIMIZERS and not name.startswith("bitsandbytes."):
+        return ""
+    try:
+        available = importlib.util.find_spec("bitsandbytes") is not None
+    except (ImportError, ValueError):
+        available = False
+    return "" if available else OPTIMIZER_DEPENDENCY_MESSAGE
+
+
+def validate_primary_training_settings(settings: dict, *, check_optimizer=True) -> None:
+    """UI preflight: report missing settings in-page before native dialogs run."""
+    error = (
+        optimizer_dependency_error(settings.get("optimizer")) if check_optimizer else ""
+    )
+    if error:
+        raise gr.Error(error)
+    if not str(settings.get("output_dir") or "").strip():
+        raise gr.Error("Choose an output directory before starting training.")
+    if not str(settings.get("pretrained_model_name_or_path") or "").strip():
+        raise gr.Error("Choose a pretrained model before starting training.")
+    if not any(
+        str(settings.get(key) or "").strip()
+        for key in ("train_data_dir", "dataset_config")
+    ):
+        raise gr.Error(
+            "Choose a training image folder or a dataset TOML before starting training."
+        )
+
+
+def training_duration_mode(max_train_epochs, max_train_steps) -> str:
+    """Infer the UI mode from existing config fields; never rewrite imported values."""
+    if float(max_train_epochs or 0) > 0:
+        return "Epochs"
+    if float(max_train_steps or 0) > 0:
+        return "Steps"
+    return "Automatic (legacy)"
+
+
+def select_training_duration(mode, epoch, max_train_epochs, max_train_steps):
+    """Explicit user changes choose one limit; legacy configs retain old semantics."""
+    if mode == "Steps":
+        return epoch, 0, max_train_steps if float(max_train_steps or 0) > 0 else 1600
+    if mode == "Epochs":
+        epochs = (
+            max_train_epochs
+            if float(max_train_epochs or 0) > 0
+            else max(float(epoch or 1), 1)
+        )
+        return epochs, epochs, 0
+    if mode == "Automatic (legacy)":
+        return epoch, 0, 0
+    raise ValueError(f"Unknown training duration mode: {mode}")
+
+
+def switch_training_duration(
+    mode, epoch, max_epochs, max_steps, last_epochs, last_steps
+):
+    """Keep inactive limits in UI state so switching modes does not erase edits."""
+    remembered_epochs = max_epochs if float(max_epochs or 0) > 0 else last_epochs
+    remembered_steps = max_steps if float(max_steps or 0) > 0 else last_steps
+    values = select_training_duration(mode, epoch, remembered_epochs, remembered_steps)
+    return (*values, remembered_epochs, remembered_steps)

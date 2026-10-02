@@ -1128,5 +1128,19 @@
   "Model & dataset": "模型与数据集",
   "Output paths": "输出路径",
   "Launch training": "启动训练",
-  "Choose where to save the file": "选择文件保存位置"
+  "Choose where to save the file": "选择文件保存位置",
+  "Training duration": "训练时长",
+  "Steps": "按步数",
+  "Epochs": "按轮数",
+  "Automatic (legacy)": "旧配置自动计算",
+  "Estimated epochs (legacy)": "估算训练轮数（旧配置）",
+  "Choose one training limit. Imported configurations keep their original values; legacy automatic mode calculates steps from the image-folder dataset.": "选择一种训练时长限制。导入配置会保留原始值；旧配置自动模式根据图片文件夹数据集计算步数。",
+  "Used only for the old automatic step calculation. A dataset TOML does not use this estimate.": "仅用于旧版自动步数计算；数据集 TOML 不使用此估算值。",
+  "Only installed optimizer dependencies are offered. Imported custom optimizer names are preserved and checked before training.": "列表仅提供依赖已安装的优化器。导入的自定义优化器名称会保留，并在启动训练前检查。",
+  "The selected optimizer requires bitsandbytes, which is not installed in this Python environment. Choose an available optimizer such as AdamW, or install bitsandbytes in this environment before training.": "所选优化器需要 bitsandbytes，但当前 Python 环境未安装。请选择 AdamW 等可用优化器，或在当前环境安装 bitsandbytes 后再训练。",
+  "Choose an output directory before starting training.": "请先选择模型输出目录，再启动训练。",
+  "Choose a pretrained model before starting training.": "请先选择预训练模型，再启动训练。",
+  "Choose a training image folder or a dataset TOML before starting training.": "请先选择训练图片文件夹或数据集 TOML，再启动训练。",
+  "Base learning rate": "通用学习率（回退值）",
+  "General optimizer learning rate. Separate component learning rates take precedence.": "优化器的通用学习率；若单独设置了组件学习率，则优先使用组件值。"
 }

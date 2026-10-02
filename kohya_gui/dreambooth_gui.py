@@ -8,6 +8,7 @@ import toml
 from datetime import datetime
 from .common_gui import (
     check_if_model_exist,
+    validate_primary_training_settings,
     training_workspace_intro,
     color_aug_changed,
     get_executable_path,
@@ -1630,10 +1631,14 @@ def dreambooth_tab(
 
         def _make_train_model_entry(print_only_comp):
             def _entry(data: dict):
+                settings = _kwargs_from_registry(data)
+                validate_primary_training_settings(
+                    settings, check_optimizer=not data[print_only_comp]
+                )
                 return train_model(
                     headless=data[dummy_headless],
                     print_only=data[print_only_comp],
-                    **_kwargs_from_registry(data),
+                    **settings,
                 )
 
             return _entry

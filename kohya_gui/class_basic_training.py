@@ -1,6 +1,11 @@
 import gradio as gr
 from typing import Tuple
 from .custom_logging import setup_logging
+from .common_gui import (
+    optimizer_dependency_error,
+    training_duration_mode,
+    switch_training_duration,
+)
 
 # Set up logging
 log = setup_logging()
@@ -83,50 +88,125 @@ class BasicTraining:
         """
         Initializes the training controls for the model.
         """
-        # Create a row for the training controls
+        initial_epochs = self.config.get("basic.max_train_epochs", 0)
+        initial_steps = self.config.get("basic.max_train_steps", 1600)
+        mode = training_duration_mode(initial_epochs, initial_steps)
+        self.duration_mode = gr.Radio(
+            label="Training duration",
+            choices=["Steps", "Epochs", "Automatic (legacy)"],
+            value=mode,
+            info="Choose one training limit. Imported configurations keep their original values; legacy automatic mode calculates steps from the image-folder dataset.",
+        )
         with gr.Row():
-            # Initialize the train batch size slider
             self.train_batch_size = gr.Slider(
                 minimum=1,
                 maximum=64,
                 label="Train batch size",
-                value=1,
-                step=self.config.get("basic.train_batch_size", 1),
+                value=self.config.get("basic.train_batch_size", 1),
+                step=1,
             )
-            # Initialize the epoch number input
             self.epoch = gr.Number(
-                label="Epoch", value=self.config.get("basic.epoch", 1), precision=0
+                label="Estimated epochs (legacy)",
+                value=self.config.get("basic.epoch", 1),
+                precision=0,
+                minimum=1,
+                visible=mode == "Automatic (legacy)",
+                info="Used only for the old automatic step calculation. A dataset TOML does not use this estimate.",
             )
-            # Initialize the maximum train epochs input
             self.max_train_epochs = gr.Number(
                 label="Max train epoch",
                 info="training epochs (overrides max_train_steps). 0 = no override",
                 step=1,
-                # precision=0,
+                precision=0,
                 minimum=0,
-                value=self.config.get("basic.max_train_epochs", 0),
+                value=initial_epochs,
+                visible=mode == "Epochs",
             )
-            # Initialize the maximum train steps input
             self.max_train_steps = gr.Number(
                 label="Max train steps",
                 info="Overrides # training steps. 0 = no override",
                 step=1,
-                # precision=0,
-                value=self.config.get("basic.max_train_steps", 1600),
+                precision=0,
+                minimum=0,
+                value=initial_steps,
+                visible=mode == "Steps",
             )
-            # Initialize the save every N epochs input
             self.save_every_n_epochs = gr.Number(
                 label="Save every N epochs",
                 value=self.config.get("basic.save_every_n_epochs", 1),
                 precision=0,
             )
-            # Initialize the caption extension input
             self.caption_extension = gr.Dropdown(
                 label="Caption file extension",
                 choices=["", ".cap", ".caption", ".txt"],
-                value=".txt",
+                value=self.config.get("basic.caption_extension", ".txt"),
                 interactive=True,
             )
+
+        self.last_duration_epochs = gr.State(
+            initial_epochs or self.config.get("basic.epoch", 1)
+        )
+        self.last_duration_steps = gr.State(initial_steps or 1600)
+        self.duration_mode.input(
+            switch_training_duration,
+            inputs=[
+                self.duration_mode,
+                self.epoch,
+                self.max_train_epochs,
+                self.max_train_steps,
+                self.last_duration_epochs,
+                self.last_duration_steps,
+            ],
+            outputs=[
+                self.epoch,
+                self.max_train_epochs,
+                self.max_train_steps,
+                self.last_duration_epochs,
+                self.last_duration_steps,
+            ],
+            show_progress=False,
+        )
+
+        def sync_duration_display(max_epochs, max_steps, last_epochs, last_steps):
+            current = training_duration_mode(max_epochs, max_steps)
+            return (
+                gr.update(value=current),
+                gr.update(visible=current == "Automatic (legacy)"),
+                gr.update(visible=current == "Epochs"),
+                gr.update(visible=current == "Steps"),
+                max_epochs if float(max_epochs or 0) > 0 else last_epochs,
+                max_steps if float(max_steps or 0) > 0 else last_steps,
+            )
+
+        # Config/preset loads trigger change, while only direct user input
+        # changes the numeric values. This preserves old config precedence.
+        for component in [self.max_train_epochs, self.max_train_steps]:
+            component.change(
+                sync_duration_display,
+                inputs=[
+                    self.max_train_epochs,
+                    self.max_train_steps,
+                    self.last_duration_epochs,
+                    self.last_duration_steps,
+                ],
+                outputs=[
+                    self.duration_mode,
+                    self.epoch,
+                    self.max_train_epochs,
+                    self.max_train_steps,
+                    self.last_duration_epochs,
+                    self.last_duration_steps,
+                ],
+                show_progress=False,
+            )
+        self.max_train_epochs.input(
+            lambda epochs: (
+                gr.update(value=epochs) if float(epochs or 0) > 0 else gr.update()
+            ),
+            inputs=[self.max_train_epochs],
+            outputs=[self.epoch],
+            show_progress=False,
+        )
 
     def init_precision_and_resources_controls(self) -> None:
         """
@@ -190,40 +270,61 @@ class BasicTraining:
             )
 
             # Initialize the optimizer dropdown
+            optimizer_choices = [
+                "AdamW",
+                "AdamWScheduleFree",
+                "AdamW8bit",
+                "Adafactor",
+                "bitsandbytes.optim.AdEMAMix8bit",
+                "bitsandbytes.optim.PagedAdEMAMix8bit",
+                "DAdaptation",
+                "DAdaptAdaGrad",
+                "DAdaptAdam",
+                "DAdaptAdan",
+                "DAdaptAdanIP",
+                "DAdaptAdamPreprint",
+                "DAdaptLion",
+                "DAdaptSGD",
+                "Lion",
+                "Lion8bit",
+                "PagedAdamW8bit",
+                "PagedAdamW32bit",
+                "PagedLion8bit",
+                "Prodigy",
+                "prodigyplus.ProdigyPlusScheduleFree",
+                "pytorch_optimizer.CAME",
+                "RAdamScheduleFree",
+                "SGDNesterov",
+                "SGDNesterov8bit",
+                "SGDScheduleFree",
+            ]
+            available = [
+                name
+                for name in optimizer_choices
+                if not optimizer_dependency_error(name)
+            ]
+            default = "AdamW8bit" if "AdamW8bit" in available else "AdamW"
             self.optimizer = gr.Dropdown(
                 label="Optimizer",
-                choices=[
-                    "AdamW",
-                    "AdamWScheduleFree",
-                    "AdamW8bit",
-                    "Adafactor",
-                    "bitsandbytes.optim.AdEMAMix8bit",
-                    "bitsandbytes.optim.PagedAdEMAMix8bit",
-                    "DAdaptation",
-                    "DAdaptAdaGrad",
-                    "DAdaptAdam",
-                    "DAdaptAdan",
-                    "DAdaptAdanIP",
-                    "DAdaptAdamPreprint",
-                    "DAdaptLion",
-                    "DAdaptSGD",
-                    "Lion",
-                    "Lion8bit",
-                    "PagedAdamW8bit",
-                    "PagedAdamW32bit",
-                    "PagedLion8bit",
-                    "Prodigy",
-                    "prodigyplus.ProdigyPlusScheduleFree",
-                    "pytorch_optimizer.CAME",
-                    "RAdamScheduleFree",
-                    "SGDNesterov",
-                    "SGDNesterov8bit",
-                    "SGDScheduleFree",
-                ],
-                value=self.config.get("basic.optimizer", "AdamW8bit"),
+                choices=available,
+                value=self.config.get("basic.optimizer", default),
                 interactive=True,
                 allow_custom_value=True,
+                info="Only installed optimizer dependencies are offered. Imported custom optimizer names are preserved and checked before training.",
             )
+        error = optimizer_dependency_error(self.optimizer.value)
+        self.optimizer_status = gr.Markdown(value=error, visible=bool(error))
+
+        def update_optimizer_status(name):
+            message = optimizer_dependency_error(name)
+            return gr.update(value=message, visible=bool(message))
+
+        self.optimizer.change(
+            update_optimizer_status,
+            inputs=[self.optimizer],
+            outputs=[self.optimizer_status],
+            show_progress=False,
+        )
 
     def init_grad_and_lr_controls(self) -> None:
         """
@@ -258,7 +359,7 @@ class BasicTraining:
             lr_label = (
                 "Learning rate Unet"
                 if self.finetuning or self.dreambooth
-                else "Learning rate"
+                else "Base learning rate"
             )
             # Initialize the learning rate number input
             self.learning_rate = gr.Number(
@@ -266,7 +367,11 @@ class BasicTraining:
                 value=self.config.get("basic.learning_rate", self.learning_rate_value),
                 minimum=-1,
                 maximum=1,
-                info="Set to 0 to not train the Unet",
+                info=(
+                    "Set to 0 to not train the Unet"
+                    if self.finetuning or self.dreambooth
+                    else "General optimizer learning rate. Separate component learning rates take precedence."
+                ),
             )
             # Initialize the learning rate TE number input
             self.learning_rate_te = gr.Number(
