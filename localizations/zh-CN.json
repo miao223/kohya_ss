@@ -1067,6 +1067,7 @@
   "Output folder (where the grouped images will be stored)": "输出文件夹（存放分组后的图片）",
   "Group images": "分组图片",
   "Settings": "设置",
+  "Manage display, tooltips and recording in one place.": "统一管理显示主题、悬停提示与屏幕录制。",
   "Enable info tooltips on hover": "悬停时显示参数说明",
   "Shows a tooltip with each field's description when hovering its name. Takes effect immediately, no restart needed.": "鼠标悬停在字段名称上时显示参数说明，立即生效，无需重启。",
   "About": "关于",

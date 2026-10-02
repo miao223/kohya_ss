@@ -63,6 +63,7 @@ def initialize_ui_interface(
     info_tooltip_js = read_file_content("./assets/js/info_tooltip.js")
     icon_button_titles_js = read_file_content("./assets/js/icon_button_titles.js")
     studio_js = read_file_content("./assets/js/studio.js")
+    settings_js = read_file_content("./assets/js/settings.js")
     shell_css = read_file_content("./assets/shell.css")
     head = (
         f'<style id="kohya-shell-style">{shell_css}</style>'
@@ -70,6 +71,7 @@ def initialize_ui_interface(
         f'<script type="text/javascript">{info_tooltip_js}</script>'
         f'<script type="text/javascript">{icon_button_titles_js}</script>'
         f'<script type="text/javascript">{studio_js}</script>'
+        f'<script type="text/javascript">{settings_js}</script>'
     )
     # Gradio 6 moved app-level shell params (css/head/theme) from Blocks() to
     # launch(); keep them bundled here so launch sites stay in sync.
@@ -119,7 +121,7 @@ def initialize_ui_interface(
                 )
                 with gr.Tab("LoRA"):
                     _ = LoRATools(headless=headless)
-            with gr.Tab("Settings"):
+            with gr.Tab("Settings", elem_id="studio-settings"):
                 settings_tab(config=config, config_file_path=config_file_path)
             with gr.Tab("About"):
                 gr.Markdown(f"kohya_ss GUI release {release_info}")

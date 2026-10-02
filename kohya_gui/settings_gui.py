@@ -17,7 +17,11 @@ def save_enable_info_tooltip(
 
 
 def settings_tab(config: KohyaSSGUIConfig, config_file_path: str):
-    with gr.Row():
+    gr.HTML(
+        '<div class="studio-intro"><h1>Settings</h1>'
+        "<p>Manage display, tooltips and recording in one place.</p></div>"
+    )
+    with gr.Column(elem_classes=["studio-preferences"]):
         enable_info_tooltip = gr.Checkbox(
             label="Enable info tooltips on hover",
             info="Shows a tooltip with each field's description when hovering its name. Takes effect immediately, no restart needed.",
@@ -29,3 +33,6 @@ def settings_tab(config: KohyaSSGUIConfig, config_file_path: str):
             outputs=[],
             js="(v) => { window.KOHYA_INFO_TOOLTIP_ENABLED = v; return v; }",
         )
+    # The frontend mounts Gradio's live settings here, retaining its native
+    # theme, PWA and recording handlers instead of duplicating their state.
+    gr.HTML('<div id="studio-native-settings"></div>', padding=False)

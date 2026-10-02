@@ -208,12 +208,59 @@
 #studio-tabs [id$="-model"], #studio-tabs [id$="-folders"], #studio-tabs [id$="-parameters"], #studio-tabs [id$="-actions"] { scroll-margin-top: 20px; }
 #studio-tabs #myTensorButton, #studio-tabs #myTensorButtonStop { background: var(--studio-surface); color: var(--studio-muted); border: 1px solid var(--studio-line); box-shadow: none; font-size: 12px; }
 .gradio-container .ver-class { color: var(--studio-muted); font-size: 11px; }
+#studio-settings .studio-preferences {
+    padding: 18px;
+    border: 1px solid var(--studio-line);
+    border-radius: 14px;
+    background: var(--studio-surface);
+}
+#studio-native-settings .studio-native-preferences {
+    position: static;
+    display: block;
+    width: 100%;
+    height: auto;
+    z-index: auto;
+    background: transparent;
+}
+#studio-native-settings .backdrop,
+#studio-native-settings .api-docs-wrap > .banner-wrap:first-child { display: none; }
+#studio-native-settings .api-docs-wrap {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+}
+#studio-native-settings .banner-wrap {
+    margin: 0;
+    padding: 20px;
+    border: 1px solid var(--studio-line);
+    border-radius: 14px;
+    background: var(--studio-surface);
+    color: var(--studio-ink);
+}
+#studio-native-settings .banner-wrap:has(.record-button) { grid-column: 1 / -1; }
+#studio-native-settings h2 { margin: 0 0 14px; font-size: 16px; color: var(--studio-ink); }
+#studio-native-settings .padded { padding: 0; color: var(--studio-muted); line-height: 1.7; }
+#studio-native-settings .theme-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+#studio-native-settings .theme-button { padding: 10px 18px; border: 1px solid var(--studio-line); }
+#studio-native-settings .current-theme { color: var(--studio-accent); border-color: var(--studio-accent); }
+#studio-native-settings .record-button { margin-top: 16px; color: var(--studio-ink); border-color: var(--studio-line); }
 @media (max-width: 900px) {
     .studio-header-note { display: none; }
     #studio-tabs .studio-overview { flex-direction: column; }
     #studio-tabs .studio-overview > .column { width: 100%; min-width: 0 !important; }
 }
 @media (max-width: 600px) {
+    #studio-native-settings .api-docs-wrap { grid-template-columns: minmax(0, 1fr); }
     .gradio-container { padding: 14px 12px 24px !important; }
     .studio-header { padding-right: 125px; min-height: 68px; }
     .studio-logo { width: 32px; height: 32px; }

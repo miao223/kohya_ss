@@ -17,3 +17,8 @@ gradio-app {
     width: 100%;
     min-width: 0;
 }
+/* Keep the native settings launcher available to the bridge, with one visible entry. */
+.kohya-unified-settings footer button.settings,
+.kohya-unified-settings footer .divider:not(.show-api-divider) { display: none !important; }
+.kohya-unified-settings .api-docs:has(.theme-buttons):not(.studio-native-preferences),
+.kohya-unified-settings .api-docs:has(.record-button):not(.studio-native-preferences) { visibility: hidden; }
