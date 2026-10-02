@@ -1,5 +1,9 @@
 # Kohya's GUI
 
+> This is [miao223's personal fork](https://github.com/miao223/kohya_ss/tree/personal).
+> The `personal` branch adds a bilingual workspace focused on Dreambooth and LoRA.
+> See [个人分支更新说明](#personal-fork-updates) for changes and platform validation.
+
 [![GitHub stars](https://img.shields.io/github/stars/bmaltais/kohya_ss?style=social)](https://github.com/bmaltais/kohya_ss/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/bmaltais/kohya_ss?style=social)](https://github.com/bmaltais/kohya_ss/network/members)
 [![License](https://img.shields.io/github/license/bmaltais/kohya_ss)](LICENSE.md)
@@ -50,6 +54,7 @@ Support for Linux and macOS is also available. While Linux support is actively m
 - [Contributing](#contributing)
 - [License](#license)
 - [Change History](#change-history)
+  - [Personal fork updates / 个人分支更新](#personal-fork-updates)
   - [v26.0.0](#v2600)
 
 
@@ -338,6 +343,43 @@ This project is licensed under the Apache License 2.0. See the [LICENSE.md](LICE
 ## Change History
 
 Only the upcoming release is detailed here. For the full history of published releases, see [GitHub Releases](https://github.com/bmaltais/kohya_ss/releases).
+
+### Personal fork updates
+
+**2026-10-02 · `personal` 分支**
+
+基于上游 v26.0.0 开发，面向个人使用，重点优化 Dreambooth 和 LoRA 的中文体验、界面布局与参数设置。
+
+**双语界面**
+
+- 右上角提供「中文 / English」快捷切换，记住语言偏好，切换时保留当前表单内容。
+- 扩充中文翻译，覆盖参数名称、说明、占位文字、指南及常用界面提示，并修正训练轮数、梯度、标注等术语。
+- 移除设置页中的重复语言选项，统一通过右上角切换。
+
+**界面与导航**
+
+- 为 Dreambooth、LoRA 增加训练工作台和模型、输出路径、训练参数、启动训练的导航。
+- 调整配色、卡片、按钮和间距；在较宽屏幕上并排显示模型与输出路径，在窄屏上自动改为纵向布局。
+- 修复页面两侧白边、切换栏目时宽度变化，以及路径栏和选择按钮未对齐的问题。
+- 顶部直接显示所有主栏目，移除「更多」折叠入口。
+- 合并顶部与底部设置：顶部设置页统一包含悬停提示、显示主题、PWA 信息及屏幕录制选项，底部不再显示重复设置入口。
+
+**常用训练设置**
+
+- 修复配置中的训练批量大小未正确读取、滑块增量错误的问题。
+- 增加按步数、按轮数及旧配置自动计算三种训练时长模式，保留导入配置的数值，记住手动切换前的时长。
+- 缺少 `bitsandbytes` 时，新配置默认使用 AdamW；保留旧配置中的优化器名称，并在启动前提示缺少的依赖。
+- 将 LoRA Rank、Alpha、文本编码器与 U-Net 学习率提前显示，说明通用学习率的回退作用。
+- Dreambooth、LoRA 在启动训练或预览命令前检查必填路径，在网页内显示缺项提示。
+
+**平台与实验工具**
+
+- 新增 `start-local.sh`，用于已安装依赖的本地环境，以中文界面启动并仅监听 `127.0.0.1:7860`。
+- 已在 Apple Silicon Mac 上启动 GUI，检查双语切换、布局、配置导入、参数校验、主题切换及设置页刷新。
+- Windows 继续使用项目原有启动脚本；本轮尚未进行 Windows 实机验证，也未验证完整模型训练。
+- 包含独立的实验性 MLX SDXL LoRA 命令行工具，采用单独环境，不接入 GUI 的「开始训练」按钮。使用范围和验证限制见 [MLX 文档](docs/LoRA/MLX.md)。
+
+对应代码提交：`79bc978`（双语工作台与实验工具）、`818af90`（训练设置修复）、`579d5a1`（合并设置页）。已完成自动化回归测试及上述浏览器检查。
 
 ### v26.0.0
 
